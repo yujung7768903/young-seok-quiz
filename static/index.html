@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마음 퀴즈 🎮</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- ══ 1. HOME ════════════════════════════════════════════ -->
+<div id="screen-home" class="screen active">
+  <div class="card">
+    <div class="logo-wrap">
+      <img src="/static/logo.png" alt="로고">
+      <div class="logo-title">마음 <span>퀴즈</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="App.goToNickname()">🎮 시작</button>
+    <p class="disclaimer">해당 게임은 친구들과 놀기 위해 만든 개인 프로젝트입니다.<br>문제 발생 시, 이름 변경 또는 서비스를 중단하겠습니다.</p>
+  </div>
+</div>
+
+<!-- ══ 2. NICKNAME ════════════════════════════════════════ -->
+<div id="screen-nickname" class="screen">
+  <div class="card">
+    <h2 id="nickname-title">닉네임을 입력해주세요</h2>
+    <input type="text" id="nickname-input" placeholder="닉네임" maxlength="10">
+    <button class="btn btn-primary" id="nickname-btn" onclick="App.submitNickname()">입장</button>
+    <button class="btn btn-secondary" onclick="App.showScreen('home')">← 돌아가기</button>
+  </div>
+</div>
+
+<!-- ══ 3. WAITING ROOM ════════════════════════════════════ -->
+<div id="screen-waiting" class="screen">
+  <div class="card">
+    <h2>함께 플레이해보세요 🎉</h2>
+    <div class="section-label">초대 링크</div>
+    <div class="invite-row">
+      <span class="invite-url" id="invite-url"></span>
+      <button class="copy-btn" onclick="App.copyInvite()">복사</button>
+    </div>
+    <div class="section-label">참여자 <span id="player-count-badge" class="badge">0</span></div>
+    <ul class="player-list" id="player-list"></ul>
+    <hr class="divider">
+    <div id="waiting-status" class="wait-text">참여자를 기다리고 있습니다...</div>
+    <button class="btn btn-primary" id="start-btn" style="display:none" onclick="App.showQuizTypeSelect()">게임 시작</button>
+  </div>
+</div>
+
+<!-- ══ 4. QUIZ TYPE SELECT ═══════════════════════════════ -->
+<div id="screen-quiz-type" class="screen">
+  <div class="card">
+    <h2>퀴즈 유형을 선택하세요</h2>
+    <div class="quiz-types">
+      <div class="quiz-type-card" onclick="App.startGame('type1')">
+        <h3>🧠 너는 읽기 쉬운 마음이야~</h3>
+        <p>출제자가 선택한 우선순위를 맞혀보세요!</p>
+      </div>
+      <div class="quiz-type-card" onclick="App.startGame('type2')">
+        <h3>🎭 인물 퀴즈</h3>
+        <p>사진을 보고 인물 이름을 맞혀보세요!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 5a. TYPE1 — QUESTIONER ═════════════════════════════ -->
+<div id="screen-type1-questioner" class="screen">
+  <div class="card">
+    <div class="section-label" id="t1q-round-label">ROUND 1 / 5</div>
+    <h2>당신의 마음을 알려주세요 💭</h2>
+    <h3 id="t1q-question" style="color:var(--accent2);margin-bottom:20px;line-height:1.5;"></h3>
+    <p style="margin-bottom:16px;font-size:0.88rem;">좋아하는 순서대로 클릭하세요 (1순위 → 4순위)</p>
+    <div class="timer-wrap">
+      <div class="timer-label"><span>남은 시간</span><span id="t1q-timer-text">30</span>초</div>
+      <div class="timer-bar"><div class="timer-fill" id="t1q-timer-bar"></div></div>
+    </div>
+    <div class="option-list" id="t1q-options"></div>
+    <button class="btn btn-primary" id="t1q-submit-btn" disabled onclick="App.submitType1Ranking()">완료</button>
+  </div>
+</div>
+
+<!-- ══ 5b. TYPE1 — WAITING (others) ══════════════════════ -->
+<div id="screen-type1-waiting" class="screen">
+  <div class="card">
+    <div class="section-label" id="t1w-round-label">ROUND 1 / 5</div>
+    <div class="wait-text">
+      <div style="font-size:2rem;margin-bottom:12px">🤔</div>
+      <strong id="t1w-questioner"></strong>님이 고민하고 있어요.<br>잠시 기다려주세요.
+    </div>
+  </div>
+</div>
+
+<!-- ══ 5c. TYPE1 — QUESTIONER waiting for others ══════════ -->
+<div id="screen-type1-questioner-wait" class="screen">
+  <div class="card">
+    <div class="wait-text">
+      <div style="font-size:2rem;margin-bottom:12px">⏳</div>
+      참여자들이 답변 중입니다.<br>잠시 기다려주세요.
+    </div>
+    <div class="section-label mt-16">제출 현황</div>
+    <div class="submitted-list" id="t1qw-submitted-list"></div>
+  </div>
+</div>
+
+<!-- ══ 5d. TYPE1 — ANSWER PHASE ═══════════════════════════ -->
+<div id="screen-type1-answer" class="screen">
+  <div class="card">
+    <h2><span id="t1a-questioner"></span>님의 마음을 맞혀보세요 🎯</h2>
+    <h3 id="t1a-question" style="color:var(--accent2);margin-bottom:20px;line-height:1.5;"></h3>
+    <p style="margin-bottom:16px;font-size:0.88rem;">출제자가 좋아할 것 같은 순서대로 클릭하세요 (1순위 → 4순위)</p>
+    <div class="timer-wrap">
+      <div class="timer-label"><span>남은 시간</span><span id="t1a-timer-text">30</span>초</div>
+      <div class="timer-bar"><div class="timer-fill" id="t1a-timer-bar"></div></div>
+    </div>
+    <div class="option-list" id="t1a-options"></div>
+    <button class="btn btn-primary" id="t1a-submit-btn" disabled onclick="App.submitType1Guess()">제출</button>
+  </div>
+</div>
+
+<!-- ══ 5e. TYPE1 — ANSWER SUBMITTED WAIT ════════════════ -->
+<div id="screen-type1-submitted" class="screen">
+  <div class="card">
+    <div class="wait-text">
+      <div style="font-size:2rem;margin-bottom:12px">✅</div>
+      답변을 제출했습니다!<br>다른 참여자를 기다리는 중...
+    </div>
+    <div class="timer-wrap mt-16">
+      <div class="timer-label"><span>남은 시간</span><span id="t1s-timer-text">30</span>초</div>
+      <div class="timer-bar"><div class="timer-fill" id="t1s-timer-bar"></div></div>
+    </div>
+    <div class="section-label mt-16">제출 현황</div>
+    <div class="submitted-list" id="t1s-submitted-list"></div>
+  </div>
+</div>
+
+<!-- ══ 5f. TYPE1 — RESULTS ════════════════════════════════ -->
+<div id="screen-type1-results" class="screen">
+  <div class="card">
+    <div class="section-label" id="t1r-round-label">ROUND 1 / 5</div>
+    <h2 id="t1r-title"></h2>
+    <div class="accuracy-badge">
+      <div class="num" id="t1r-accuracy"></div>
+      <div class="label">정답률 (완벽히 맞힌 비율)</div>
+    </div>
+    <div class="section-label">출제자의 정답</div>
+    <div class="result-option-list" id="t1r-answer-list"></div>
+    <div class="section-label">참여자 답변</div>
+    <div class="player-results" id="t1r-player-results"></div>
+    <div style="text-align:center;color:var(--text-muted);font-size:0.88rem;margin-bottom:12px">
+      <span id="t1r-ready-count">0</span> / <span id="t1r-total-count">0</span>명이 준비됨
+    </div>
+    <button class="btn btn-success" id="t1r-next-btn" onclick="App.readyNext()">다음 문제로 넘어가기 →</button>
+  </div>
+</div>
+
+<!-- ══ 6a. TYPE2 — STARTING ════════════════════════════════ -->
+<div id="screen-type2-starting" class="screen">
+  <div class="card">
+    <h2 class="text-center">🎭 인물 퀴즈!</h2>
+    <div class="countdown-big">
+      <div class="num" id="t2s-countdown">5</div>
+      <div class="label">잠시 후 시작됩니다</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 6b. TYPE2 — QUESTION ════════════════════════════════ -->
+<div id="screen-type2-question" class="screen">
+  <div class="card">
+    <div class="section-label" id="t2q-label">1 / 5</div>
+    <h2>이 인물은 누구일까요? 🤔</h2>
+    <div class="timer-wrap">
+      <div class="timer-label"><span>남은 시간</span><span id="t2q-timer-text">10</span>초</div>
+      <div class="timer-bar"><div class="timer-fill" id="t2q-timer-bar"></div></div>
+    </div>
+    <div class="person-img-wrap">
+      <img id="t2q-image" src="" alt="인물 이미지">
+    </div>
+    <div class="answer-row">
+      <input type="text" id="t2q-answer-input" placeholder="이름을 입력하세요">
+      <button class="btn btn-primary" onclick="App.submitType2Answer()" style="width:auto">제출</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 6c. TYPE2 — RESULT ═════════════════════════════════ -->
+<div id="screen-type2-result" class="screen">
+  <div class="card">
+    <div class="result-banner" id="t2r-banner">
+      <div class="result-icon" id="t2r-icon"></div>
+      <div class="result-text" id="t2r-text"></div>
+    </div>
+    <div class="person-img-wrap">
+      <img id="t2r-image" src="" alt="인물">
+    </div>
+    <div style="text-align:center;font-size:1.4rem;font-weight:800;color:var(--accent2)" id="t2r-name"></div>
+    <div style="text-align:center;margin-top:16px;color:var(--text-muted);font-size:0.9rem" id="t2r-countdown-msg"></div>
+  </div>
+</div>
+
+<!-- ══ 7. GAME OVER ══════════════════════════════════════ -->
+<div id="screen-game-over" class="screen">
+  <div class="card">
+    <h2 class="text-center">🎊 게임 종료!</h2>
+    <div id="go-scores-wrap" style="display:none">
+      <div class="section-label mt-16">최종 점수</div>
+      <div class="scoreboard" id="go-scoreboard"></div>
+    </div>
+    <p id="go-message" class="text-center" style="margin-top:20px;color:var(--text-muted)"></p>
+    <button class="btn btn-primary mt-16" onclick="location.reload()">처음으로</button>
+  </div>
+</div>
+
+<!-- ══ Toast ══════════════════════════════════════════════ -->
+<div id="toast" style="
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:#222;color:#fff;padding:10px 20px;border-radius:20px;
+  font-size:0.9rem;font-weight:600;transition:transform 0.3s ease;
+  pointer-events:none;z-index:9999;white-space:nowrap;
+"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
