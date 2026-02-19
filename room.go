@@ -63,15 +63,18 @@ type Room struct {
 	unregister chan *Client
 	game       *Game
 	mu         sync.RWMutex
+	// ── Waiting Room fields ───────────────────────
+	startReadyPlayers map[string]bool
 }
 
 func newRoom(id string, hub *Hub) *Room {
 	return &Room{
-		id:         id,
-		hub:        hub,
-		clients:    make(map[string]*Client),
-		register:   make(chan *Client, 32),
-		unregister: make(chan *Client, 32),
+		id:                id,
+		hub:               hub,
+		clients:           make(map[string]*Client),
+		register:          make(chan *Client, 32),
+		unregister:        make(chan *Client, 32),
+		startReadyPlayers: make(map[string]bool),
 	}
 }
 

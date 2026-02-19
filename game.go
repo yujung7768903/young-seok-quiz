@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"math/rand"
 	"strings"
 	"sync"
@@ -50,16 +51,11 @@ func newGame(room *Room) *Game {
 	}
 }
 
-func (g *Game) start(quizType string) {
+func (g *Game) start() {
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	g.quizType = quizType
-	g.room.broadcastJSON("game_started", map[string]interface{}{"quiz_type": quizType})
-	if quizType == "type1" {
+	g.room.broadcastJSON("game_started", nil)
 		g.initType1()
-	} else {
-		g.initType2()
-	}
 }
 
 // ═══════════════════════════════════════════════
@@ -84,7 +80,7 @@ func (g *Game) initType1() {
 
 func (g *Game) nextType1Round() {
 	if g.t1CurrentRound >= g.t1Rounds {
-		g.endGame()
+		g.initType2()
 		return
 	}
 

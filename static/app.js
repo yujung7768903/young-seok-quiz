@@ -19,8 +19,9 @@ const App = (() => {
     t2TimerInterval: null,
     t2CountdownInterval: null,
     t2Submitted: false,
-    // ready-next
-    readyClicked: false,
+    // ready
+    readyStartClicked: false,
+    readyNextClicked: false,
   };
 
   // ── URL helpers ────────────────────────────────────────
@@ -82,6 +83,8 @@ const App = (() => {
       player_left:               onPlayerLeft,
       error:                     onError,
       game_started:              onGameStarted,
+      // Waiting Room
+      ready_start_update:        onReadyStartUpdate,
       // Type 1
       type1_questioner:          onType1Questioner,
       type1_waiting:             onType1Waiting,
@@ -100,6 +103,7 @@ const App = (() => {
       game_over:                 onGameOver,
     };
     const fn = handlers[type];
+    console.log(`handleServerMessage type: ${type}`);
     if (fn) fn(data);
     else console.log('unhandled:', type, data);
   }
@@ -166,6 +170,7 @@ const App = (() => {
     const url = `${location.origin}/?room=${state.roomId}`;
     document.getElementById('invite-url').textContent = url;
     document.getElementById('player-count-badge').textContent = state.players.length;
+    document.getElementById('start-total-count').textContent = state.players.length;
 
     const list = document.getElementById('player-list');
     list.innerHTML = state.players.map(p => `
@@ -176,13 +181,13 @@ const App = (() => {
       </li>
     `).join('');
 
-    const canStart = state.isHost && state.players.length >= 2;
+    const canStart = state.players.length >= 2;
+    const waitingStatus = document.getElementById('waiting-status');
+    const readyStatus = document.getElementById('ready-status');
     const startBtn = document.getElementById('start-btn');
-    const status = document.getElementById('waiting-status');
+    waitingStatus.style.display = canStart ? 'none' : 'block';
+    readyStatus.style.display = canStart ? 'block' : 'none';
     startBtn.style.display = canStart ? 'block' : 'none';
-    status.textContent = state.players.length < 2
-      ? '참여자를 기다리고 있습니다...'
-      : `${state.players.length}명 참여 중`;
   }
 
   function copyInvite() {
@@ -190,21 +195,32 @@ const App = (() => {
     navigator.clipboard.writeText(url).then(() => toast('링크 복사됨!')).catch(() => toast('복사 실패'));
   }
 
+  function readyStart() {
+    if (state.readyStartClicked) return;
+    state.readyStartClicked = true;
+    document.getElementById("start-btn").disabled = true;
+    send('ready_start', { room_id: state.roomId });
+  }
+
   function showQuizTypeSelect() {
     if (!state.isHost) return;
     showScreen('quiz-type');
   }
 
-  function startGame(quizType) {
-    send('start_game', { quiz_type: quizType });
+  // function startGame(quizType) {
+  //   send('start_game', { quiz_type: quizType });
+  // }
+
+  function onReadyStartUpdate({ ready_count, total_count }) {
+    document.getElementById('start-ready-count').textContent = ready_count;
+    document.getElementById('start-total-count').textContent = total_count;
+    if (ready_count >= total_count) {
+      document.getElementById('start-btn').disabled = true;
+    }
   }
 
-  function onGameStarted({ quiz_type }) {
-    if (quiz_type === 'type1') {
-      // waiting for type1_questioner or type1_waiting
-    } else {
-      // waiting for type2_starting
-    }
+  function onGameStarted() {
+    // waiting for type1_questioner or type1_waiting
   }
 
   function onError({ message }) {
@@ -272,7 +288,7 @@ const App = (() => {
   function onType1Results({ round, total_rounds, questioner_nickname, question, questioner_ranking, player_results, accuracy, is_last_round }) {
     stopTimer('t1a');
     stopTimer('t1s');
-    state.readyClicked = false;
+    state.readyNextClicked = false;
 
     document.getElementById('t1r-round-label').textContent = `ROUND ${round} / ${total_rounds}`;
     document.getElementById('t1r-title').textContent = `${questioner_nickname}님의 마음 📊`;
@@ -403,8 +419,8 @@ const App = (() => {
   }
 
   function readyNext() {
-    if (state.readyClicked) return;
-    state.readyClicked = true;
+    if (state.readyNextClicked) return;
+    state.readyNextClicked = true;
     document.getElementById('t1r-next-btn').disabled = true;
     send('ready_next', {});
   }
@@ -594,10 +610,10 @@ const App = (() => {
     submitNickname,
     copyInvite,
     showQuizTypeSelect,
-    startGame,
     selectOption,
     submitType1Ranking,
     submitType1Guess,
+    readyStart,
     readyNext,
     submitType2Answer,
   };

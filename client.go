@@ -121,17 +121,20 @@ func (c *Client) writePump() {
 // ──────────────────────────────────────────────
 
 func handleMessage(hub *Hub, c *Client, m InMsg) {
+	log.Printf("message type: %s", m.Type)
 	switch m.Type {
 	case "create_room":
 		handleCreateRoom(hub, c, m.Data)
 	case "join_room":
 		handleJoinRoom(hub, c, m.Data)
 	case "start_game":
-		handleStartGame(c, m.Data)
+		handleStartGame(c)
 	case "type1_submit_ranking":
 		handleType1SubmitRanking(c, m.Data)
 	case "type1_submit_guess":
 		handleType1SubmitGuess(c, m.Data)
+	case "ready_start":
+		handleReadyStart(hub, c, m.Data)
 	case "ready_next":
 		handleReadyNext(c)
 	case "type2_submit_answer":
@@ -204,9 +207,10 @@ func handleJoinRoom(hub *Hub, c *Client, data json.RawMessage) {
 	})
 }
 
-func handleStartGame(c *Client, data json.RawMessage) {
-	if c.room == nil || !c.isHost {
-		sendError(c, "게임을 시작할 권한이 없습니다.")
+func handleStartGame(c *Client) {
+	log.Println("handleStartGame start!")
+	if c.room == nil {
+		sendError(c, "예상치 못한 문제로 게임을 시작할 수 없습니다. 새로운 게임을 생성해주세요.")
 		return
 	}
 	if c.room.clientCount() < 2 {
@@ -217,16 +221,9 @@ func handleStartGame(c *Client, data json.RawMessage) {
 		sendError(c, "이미 게임이 진행 중입니다.")
 		return
 	}
-	var d struct {
-		QuizType string `json:"quiz_type"`
-	}
-	if err := json.Unmarshal(data, &d); err != nil || (d.QuizType != "type1" && d.QuizType != "type2") {
-		sendError(c, "올바른 퀴즈 유형을 선택해주세요.")
-		return
-	}
 	game := newGame(c.room)
 	c.room.game = game
-	game.start(d.QuizType)
+	game.start()
 }
 
 func handleType1SubmitRanking(c *Client, data json.RawMessage) {
@@ -253,6 +250,41 @@ func handleType1SubmitGuess(c *Client, data json.RawMessage) {
 		return
 	}
 	c.room.game.onType1PlayerGuess(c, d.Ranking)
+}
+
+func handleReadyStart(hub *Hub, c *Client, data json.RawMessage) {
+	log.Println("[handleReadyStart] start!")
+	var d struct {
+		RoomId string `json:"room_id"`
+	}
+	if err := json.Unmarshal(data, &d); err != nil {
+		sendError(c, "방을 찾을 수 없습니다.")
+		return
+	}
+	room, ok := hub.getRoom(d.RoomId)
+	if !ok {
+		sendError(c, "방을 찾을 수 없습니다.")
+		return
+	}
+
+	if room.game != nil {
+		sendError(c, "이미 게임이 시작된 방입니다.")
+		return
+	}
+
+	room.mu.Lock()
+	room.startReadyPlayers[c.id] = true
+	room.mu.Unlock()
+
+	total := room.clientCount()
+	log.Printf("[handleReadyStart] ready_count: %d", len(room.startReadyPlayers))
+	room.broadcastJSON("ready_start_update", map[string]interface{}{
+		"ready_count": len(room.startReadyPlayers),
+		"total_count": total,
+	})
+	if len(room.startReadyPlayers) >= total {
+		handleStartGame(c)
+	}
 }
 
 func handleReadyNext(c *Client) {

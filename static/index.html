@@ -43,12 +43,15 @@
     <ul class="player-list" id="player-list"></ul>
     <hr class="divider">
     <div id="waiting-status" class="wait-text">참여자를 기다리고 있습니다...</div>
-    <button class="btn btn-primary" id="start-btn" style="display:none" onclick="App.showQuizTypeSelect()">게임 시작</button>
+    <div id="ready-status" class="wait-text">
+      <span id="start-ready-count">0</span> / <span id="start-total-count">0</span>명이 준비됨
+    </div>
+    <button class="btn btn-success" id="start-btn" onclick="App.readyStart()">준비 완료!</button>
   </div>
 </div>
 
 <!-- ══ 4. QUIZ TYPE SELECT ═══════════════════════════════ -->
-<div id="screen-quiz-type" class="screen">
+<!-- <div id="screen-quiz-type" class="screen">
   <div class="card">
     <h2>퀴즈 유형을 선택하세요</h2>
     <div class="quiz-types">
@@ -62,7 +65,7 @@
       </div>
     </div>
   </div>
-</div>
+</div> -->
 
 <!-- ══ 5a. TYPE1 — QUESTIONER ═════════════════════════════ -->
 <div id="screen-type1-questioner" class="screen">
