@@ -96,8 +96,9 @@ const App = (() => {
       // Type 2
       type2_starting:            onType2Starting,
       type2_question:            onType2Question,
-      type2_correct:             onType2Correct,
-      type2_fail:                onType2Fail,
+      type2_wrong:               onType2Wrong,
+      type2_result_correct:      onType2ResultCorrect,
+      type2_result_fail:         onType2ResultFail,
       type2_next_countdown:      onType2NextCountdown,
       // Common
       game_over:                 onGameOver,
@@ -467,33 +468,45 @@ const App = (() => {
     send('type2_submit_answer', { answer });
   }
 
-  function onType2Correct({ winner_nickname, answer, image_url }) {
+  function onType2Wrong({ image_url}) {
+    const banner = document.getElementById('t2r-banner');
+    banner.className = 'result-banner fail';
+    document.getElementById('t2r-icon').textContent = '😢';
+    document.getElementById('t2r-text').textContent = '땡!';
+    document.getElementById('t2r-image').src = image_url;
+    document.getElementById('t2r-answer').textContent = "?";
+    document.getElementById('t2r-guide-msg').textContent = '참여자들이 답변 중입니다.';
+    showScreen('type2-result');
+  }
+
+  function onType2ResultCorrect({ winner_nickname, answer, image_url }) {
+    console.log("onType2ResultCorrect!!");
     stopTimer('t2q');
     const banner = document.getElementById('t2r-banner');
     banner.className = 'result-banner correct';
     document.getElementById('t2r-icon').textContent = '🎉';
     document.getElementById('t2r-text').textContent = `${winner_nickname} 정답!`;
     document.getElementById('t2r-image').src = image_url;
-    document.getElementById('t2r-name').textContent = answer;
-    document.getElementById('t2r-countdown-msg').textContent = '';
+    document.getElementById('t2r-answer').textContent = answer;
+    document.getElementById('t2r-guide-msg').textContent = '';
     showScreen('type2-result');
   }
 
-  function onType2Fail({ answer, image_url }) {
+  function onType2ResultFail({ answer, image_url }) {
     stopTimer('t2q');
     const banner = document.getElementById('t2r-banner');
     banner.className = 'result-banner fail';
     document.getElementById('t2r-icon').textContent = '😢';
-    document.getElementById('t2r-text').textContent = '실패!';
+    document.getElementById('t2r-text').textContent = '땡!';
     document.getElementById('t2r-image').src = image_url;
-    document.getElementById('t2r-name').textContent = answer;
-    document.getElementById('t2r-countdown-msg').textContent = '';
+    document.getElementById('t2r-answer').textContent = answer;
+    document.getElementById('t2r-guide-msg').textContent = '';
     showScreen('type2-result');
   }
 
   function onType2NextCountdown({ countdown }) {
     let count = countdown;
-    const el = document.getElementById('t2r-countdown-msg');
+    const el = document.getElementById('t2r-guide-msg');
     if (el) el.textContent = `다음 문제까지 ${count}초...`;
     clearInterval(state.t2CountdownInterval);
     state.t2CountdownInterval = setInterval(() => {

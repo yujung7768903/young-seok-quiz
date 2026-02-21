@@ -338,7 +338,7 @@ func (g *Game) startType2Question() {
 		if g.state != "type2_question" {
 			return
 		}
-		g.showType2Fail()
+		g.showType2ResultFail(q.Answer, q.ImageURL)
 	})
 }
 
@@ -350,29 +350,43 @@ func (g *Game) onType2Answer(c *Client, answer string) {
 	}
 	q := g.t2Questions[g.t2CurrentIdx]
 	if normalizeAnswer(answer) == normalizeAnswer(q.Answer) {
+		g.showType2Correct(c, q.Answer, q.ImageURL)
+	} else {
+		g.showType2Wrong(c, q.Answer, q.ImageURL)
+	}
+}
+
+// 일부 참여자가 정답을 틀렸을 경우
+func (g *Game) showType2Wrong(c *Client, answer string, imageURL string) {
+	log.Println("onType2Answer wrong!!")
+	g.room.sendTo(c, "type2_wrong", map[string]interface{}{
+		"image_url": imageURL,
+	})
+}
+
+func (g *Game) showType2Correct(c *Client, answer string, imageURL string) {
+	g.state = "type2_result"
+	log.Println("onType2Answer correct!!")
 		g.t2RoundDone = true
 		g.stopTimer()
 		g.t2Scores[c.id]++
-		g.state = "type2_result"
-		g.room.broadcastJSON("type2_correct", map[string]interface{}{
+	g.room.broadcastJSON("type2_result_correct", map[string]interface{}{
 			"winner_nickname": c.nickname,
-			"answer":          q.Answer,
-			"image_url":       q.ImageURL,
+		"answer":          answer,
+		"image_url":       imageURL,
 		})
 		g.resetTimer(type2ResultWait, func() {
 			g.mu.Lock()
 			defer g.mu.Unlock()
 			g.type2NextCountdown()
 		})
-	}
 }
 
-func (g *Game) showType2Fail() {
+func (g *Game) showType2ResultFail(answer string, imageURL string) {
 	g.state = "type2_result"
-	q := g.t2Questions[g.t2CurrentIdx]
-	g.room.broadcastJSON("type2_fail", map[string]interface{}{
-		"answer":    q.Answer,
-		"image_url": q.ImageURL,
+	g.room.broadcastJSON("type2_result_fail", map[string]interface{}{
+		"answer":    answer,
+		"image_url": imageURL,
 	})
 	g.resetTimer(type2ResultWait, func() {
 		g.mu.Lock()
