@@ -153,6 +153,7 @@ func handleCreateRoom(hub *Hub, c *Client, data json.RawMessage) {
 		return
 	}
 	room := hub.createRoom()
+	log.Printf("rooms: %v", hub.rooms)
 	c.nickname = d.Nickname
 	c.room = room
 	c.isHost = true
@@ -171,6 +172,8 @@ func handleJoinRoom(hub *Hub, c *Client, data json.RawMessage) {
 		RoomID   string `json:"room_id"`
 		Nickname string `json:"nickname"`
 	}
+	log.Printf("rooms: %v", hub.rooms)
+	log.Printf("handleJoinRoom RoomId: %s", d.RoomID)
 	if err := json.Unmarshal(data, &d); err != nil || d.Nickname == "" {
 		sendError(c, "닉네임을 입력해주세요.")
 		return
