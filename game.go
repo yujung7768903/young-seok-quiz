@@ -24,20 +24,21 @@ type Game struct {
 	mu       sync.Mutex
 
 	// ── Type 1 fields ─────────────────────────────
-	t1Rounds        int
-	t1CurrentRound  int
-	t1QOrder        []string          // player IDs in questioner order
-	t1QuestionerID  string
-	t1Question      Type1Question
-	t1QuestRanking  []int             // ranking[i] = rank of option i (1-4)
-	t1Guesses       map[string][]int  // clientID -> ranking
-	t1ReadyPlayers  map[string]bool
+	t1Rounds       int
+	t1CurrentRound int
+	t1QOrder       []string // player IDs in questioner order
+	t1QuestionerID string
+	t1Question     Type1Question
+	t1QuestRanking []int            // ranking[i] = rank of option i (1-4)
+	t1Guesses      map[string][]int // clientID -> ranking
+	t1ReadyPlayers map[string]bool
 
 	// ── Type 2 fields ─────────────────────────────
-	t2Questions    []PersonQuestion
-	t2CurrentIdx   int
-	t2Scores       map[string]int
-	t2RoundDone    bool
+	t2Questions   []PersonQuestion
+	t2CurrentIdx  int
+	t2Scores      map[string]int
+	t2FailPlayers map[string]bool
+	t2RoundDone   bool
 
 	timer *time.Timer
 }
@@ -48,6 +49,7 @@ func newGame(room *Room) *Game {
 		t1Guesses:      make(map[string][]int),
 		t1ReadyPlayers: make(map[string]bool),
 		t2Scores:       make(map[string]int),
+		t2FailPlayers:  make(map[string]bool),
 	}
 }
 
@@ -291,6 +293,7 @@ func (g *Game) onReadyNext(c *Client) {
 // ═══════════════════════════════════════════════
 
 func (g *Game) initType2() {
+	g.t2FailPlayers = make(map[string]bool)
 	questions, err := loadPersonQuestions()
 	if err != nil || len(questions) == 0 {
 		g.room.broadcastJSON("error", map[string]interface{}{
@@ -321,6 +324,7 @@ func (g *Game) startType2Question() {
 		g.endGame()
 		return
 	}
+	g.t2FailPlayers = make(map[string]bool)
 	g.state = "type2_question"
 	g.t2RoundDone = false
 	q := g.t2Questions[g.t2CurrentIdx]
@@ -356,32 +360,40 @@ func (g *Game) onType2Answer(c *Client, answer string) {
 	}
 }
 
-// 일부 참여자가 정답을 틀렸을 경우
+// 참여자가 정답을 틀렸을 경우
 func (g *Game) showType2Wrong(c *Client, answer string, imageURL string) {
 	log.Println("onType2Answer wrong!!")
-	g.room.sendTo(c, "type2_wrong", map[string]interface{}{
-		"image_url": imageURL,
-	})
+	g.t2FailPlayers[c.id] = true
+	total := g.room.clientCount()
+	if len(g.t2FailPlayers) < total {
+		g.room.sendTo(c, "type2_wrong", map[string]interface{}{
+			"image_url": imageURL,
+		})
+	} else {
+		g.showType2ResultFail(answer, imageURL)
+	}
 }
 
+// 게임 종료: 참여자가 정답을 맞췄을 경우
 func (g *Game) showType2Correct(c *Client, answer string, imageURL string) {
 	g.state = "type2_result"
 	log.Println("onType2Answer correct!!")
-		g.t2RoundDone = true
-		g.stopTimer()
-		g.t2Scores[c.id]++
+	g.t2RoundDone = true
+	g.stopTimer()
+	g.t2Scores[c.id]++
 	g.room.broadcastJSON("type2_result_correct", map[string]interface{}{
-			"winner_nickname": c.nickname,
+		"winner_nickname": c.nickname,
 		"answer":          answer,
 		"image_url":       imageURL,
-		})
-		g.resetTimer(type2ResultWait, func() {
-			g.mu.Lock()
-			defer g.mu.Unlock()
-			g.type2NextCountdown()
-		})
+	})
+	g.resetTimer(type2ResultWait, func() {
+		g.mu.Lock()
+		defer g.mu.Unlock()
+		g.type2NextCountdown()
+	})
 }
 
+// 게임 종료: 정답을 맞힌 참여자가 없을 경우
 func (g *Game) showType2ResultFail(answer string, imageURL string) {
 	g.state = "type2_result"
 	g.room.broadcastJSON("type2_result_fail", map[string]interface{}{
