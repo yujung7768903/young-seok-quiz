@@ -84,6 +84,33 @@ var type1Questions = []Type1Question{
 			"체육",
 		},
 	},
+	{
+		Question: "다음 생에 다시 태어난다면, 살아보고 싶은 삶의 순위는?",
+		Options: []string{
+			"지금 이대로 똑같이 한 번 더",
+			"전 세계적인 스타",
+			"재벌",
+			"대통령",
+		},
+	},
+	{
+		Question: "매주 1회 배워야 한다면?",
+		Options: []string{
+			"악기",
+			"춤",
+			"노래",
+			"언어(외국어, 수화 등)",
+		},
+	},
+	{
+		Question: "친구가 약속 시간에 한시간 늦었다면?",
+		Options: []string{
+			"어떻게 이렇게 늦냐며 화를 낸다.",
+			"시간이 많이 남았으니 나 혼자 논다.",
+			"시간 아까우니 집에 간다.",
+			"다음에 만날 땐 나도 늦는다.",
+		},
+	},
 }
 
 func randomType1Question() Type1Question {
