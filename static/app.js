@@ -203,15 +203,6 @@ const App = (() => {
     send('ready_start', { room_id: state.roomId });
   }
 
-  function showQuizTypeSelect() {
-    if (!state.isHost) return;
-    showScreen('quiz-type');
-  }
-
-  // function startGame(quizType) {
-  //   send('start_game', { quiz_type: quizType });
-  // }
-
   function onReadyStartUpdate({ ready_count, total_count }) {
     document.getElementById('start-ready-count').textContent = ready_count;
     document.getElementById('start-total-count').textContent = total_count;
@@ -517,7 +508,7 @@ const App = (() => {
   // GAME OVER
   // ══════════════════════════════════════════════════════
 
-  function onGameOver({ quiz_type, scores }) {
+  function onGameOver({ scores }) {
     stopTimer('t1q');
     stopTimer('t1a');
     stopTimer('t1s');
@@ -528,7 +519,7 @@ const App = (() => {
     const scoreboard = document.getElementById('go-scoreboard');
     const message = document.getElementById('go-message');
 
-    if (quiz_type === 'type2' && scores && scores.length > 0) {
+    if (scores && scores.length > 0) {
       scoresWrap.style.display = 'block';
       const sorted = [...scores].sort((a, b) => b.score - a.score);
       const medals = ['🥇', '🥈', '🥉'];
@@ -619,7 +610,6 @@ const App = (() => {
     goToNickname,
     submitNickname,
     copyInvite,
-    showQuizTypeSelect,
     selectOption,
     submitType1Ranking,
     submitType1Guess,

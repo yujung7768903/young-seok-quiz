@@ -24,10 +24,9 @@ const (
 )
 
 type Game struct {
-	room     *Room
-	quizType string
-	state    string
-	mu       sync.Mutex
+	room  *Room
+	state string
+	mu    sync.Mutex
 
 	// ── Type 1 fields ─────────────────────────────
 	t1Rounds       int
@@ -448,17 +447,14 @@ func (g *Game) endGame() {
 		Score    int    `json:"score"`
 	}
 	var scores []ScoreEntry
-	if g.quizType == "type2" {
 		g.room.mu.RLock()
 		for id, c := range g.room.clients {
-			scores = append(scores, ScoreEntry{ID: id, Nickname: c.nickname, Score: g.t2Scores[id]})
+		scores = append(scores, ScoreEntry{ID: id, Nickname: c.nickname, Score: g.t2Score[id]})
 		}
 		g.room.mu.RUnlock()
-	}
 
 	g.room.broadcastJSON("game_over", map[string]interface{}{
-		"quiz_type": g.quizType,
-		"scores":    scores,
+		"scores": scores,
 	})
 	g.room.game = nil
 }
