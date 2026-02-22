@@ -11,8 +11,10 @@ import (
 )
 
 const (
-	type1ThinkTime  = 30 * time.Second
-	type1AnswerTime = 30 * time.Second
+	type1ThinkTime   = 30 * time.Second
+	type1AnswerTime  = 30 * time.Second
+	type1OptionCount = 4
+
 	type2StartWait  = 5 * time.Second
 	type2QTime      = 10 * time.Second
 	type2ResultWait = 0 * time.Second
@@ -31,7 +33,7 @@ type Game struct {
 	t1QOrder       []string // player IDs in questioner order
 	t1QuestionerID string
 	t1Question     Type1Question
-	t1QuestRanking []int            // ranking[i] = rank of option i (1-4)
+	t1QuestRanking []int            // ranking[i] = rank of option i
 	t1Guesses      map[string][]int // clientID -> ranking
 	t1ReadyPlayers map[string]bool
 
@@ -235,10 +237,10 @@ func (g *Game) showType1Results() {
 		}
 		ranking := g.t1Guesses[id]
 		if ranking == nil {
-			ranking = []int{0, 0, 0, 0}
+			ranking = make([]int, type1OptionCount)
 		}
 		score := 0
-		for i := 0; i < 4 && i < len(ranking) && i < len(g.t1QuestRanking); i++ {
+		for i := 0; i < type1OptionCount && i < len(ranking) && i < len(g.t1QuestRanking); i++ {
 			if ranking[i] == g.t1QuestRanking[i] {
 				score++
 			}
@@ -251,7 +253,7 @@ func (g *Game) showType1Results() {
 
 	perfectCount := 0
 	for _, pr := range results {
-		if pr.Score == 4 {
+		if pr.Score == type1OptionCount {
 			perfectCount++
 		}
 	}
@@ -466,18 +468,21 @@ func (g *Game) stopTimer() {
 }
 
 func shuffledRanks() []int {
-	r := []int{1, 2, 3, 4}
+	r := make([]int, type1OptionCount)
+	for i := range r {
+		r[i] = i + 1
+	}
 	rand.Shuffle(len(r), func(i, j int) { r[i], r[j] = r[j], r[i] })
 	return r
 }
 
 func validRanking(r []int) bool {
-	if len(r) != 4 {
+	if len(r) != type1OptionCount {
 		return false
 	}
 	seen := make(map[int]bool)
 	for _, v := range r {
-		if v < 1 || v > 4 || seen[v] {
+		if v < 1 || v > type1OptionCount || seen[v] {
 			return false
 		}
 		seen[v] = true
