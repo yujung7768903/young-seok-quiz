@@ -471,7 +471,6 @@ const App = (() => {
   function onType2Wrong({ image_url}) {
     const banner = document.getElementById('t2r-banner');
     banner.className = 'result-banner fail';
-    document.getElementById('t2r-icon').textContent = '😢';
     document.getElementById('t2r-text').textContent = '땡!';
     document.getElementById('t2r-image').src = image_url;
     document.getElementById('t2r-answer').textContent = "?";
@@ -484,7 +483,6 @@ const App = (() => {
     stopTimer('t2q');
     const banner = document.getElementById('t2r-banner');
     banner.className = 'result-banner correct';
-    document.getElementById('t2r-icon').textContent = '🎉';
     document.getElementById('t2r-text').textContent = `${winner_nickname} 정답!`;
     document.getElementById('t2r-image').src = image_url;
     document.getElementById('t2r-answer').textContent = answer;
@@ -496,7 +494,6 @@ const App = (() => {
     stopTimer('t2q');
     const banner = document.getElementById('t2r-banner');
     banner.className = 'result-banner fail';
-    document.getElementById('t2r-icon').textContent = '😢';
     document.getElementById('t2r-text').textContent = '땡!';
     document.getElementById('t2r-image').src = image_url;
     document.getElementById('t2r-answer').textContent = answer;

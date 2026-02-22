@@ -274,7 +274,7 @@ input[type="text"]:focus { border-color: var(--accent); }
 /* ── Correct / Fail banner ───────────────────────────── */
 .result-banner {
   text-align: center;
-  padding: 24px 0 8px;
+  padding: 12px 0;
   border-radius: var(--radius);
   margin-bottom: 20px;
 }
