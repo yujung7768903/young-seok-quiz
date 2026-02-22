@@ -28,6 +28,9 @@ type Game struct {
 	state string
 	mu    sync.Mutex
 
+	// ── Common ────────────────────────────────────
+	score map[string]int
+
 	// ── Type 1 fields ─────────────────────────────
 	t1Rounds       int
 	t1CurrentRound int
@@ -41,7 +44,6 @@ type Game struct {
 	// ── Type 2 fields ─────────────────────────────
 	t2Questions   []PersonQuestion
 	t2CurrentIdx  int
-	t2Scores      map[string]int
 	t2FailPlayers map[string]bool
 	t2RoundDone   bool
 
@@ -51,9 +53,9 @@ type Game struct {
 func newGame(room *Room) *Game {
 	return &Game{
 		room:           room,
+		score:          make(map[string]int),
 		t1Guesses:      make(map[string][]int),
 		t1ReadyPlayers: make(map[string]bool),
-		t2Scores:       make(map[string]int),
 		t2FailPlayers:  make(map[string]bool),
 	}
 }
@@ -62,7 +64,15 @@ func (g *Game) start() {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	g.room.broadcastJSON("game_started", nil)
+	g.initScore()
 		g.initType1()
+}
+
+func (g *Game) initScore() {
+	for id := range g.room.clients {
+		g.score[id] = 0
+	}
+
 }
 
 // ═══════════════════════════════════════════════
@@ -264,9 +274,13 @@ func (g *Game) collectType1Results() []t1PlayerResult {
 				score++
 			}
 		}
+		// 라운드 점수 세팅
 		results = append(results, t1PlayerResult{
 			ID: id, Nickname: c.nickname, Ranking: ranking, Score: score,
 		})
+		// 누적 점수 세팅
+		g.score[id] += score
+		log.Printf("type1 id: %s, score: %d", id, g.score[id])
 	}
 	return results
 }
@@ -315,12 +329,6 @@ func (g *Game) initType2() {
 	}
 	g.t2Questions = questions
 	g.t2CurrentIdx = 0
-	g.room.mu.RLock()
-	for id := range g.room.clients {
-		g.t2Scores[id] = 0
-	}
-	g.room.mu.RUnlock()
-
 	g.state = "type2_countdown"
 	g.room.broadcastJSON("type2_starting", map[string]interface{}{"countdown": 5})
 
@@ -392,7 +400,7 @@ func (g *Game) showType2Correct(c *Client, answer string, imageURL string) {
 	log.Println("onType2Answer correct!!")
 	g.t2RoundDone = true
 	g.stopTimer()
-	g.t2Scores[c.id]++
+	g.score[c.id]++
 	g.room.broadcastJSON("type2_result_correct", map[string]interface{}{
 		"winner_nickname": c.nickname,
 		"answer":          answer,
@@ -449,7 +457,7 @@ func (g *Game) endGame() {
 	var scores []ScoreEntry
 		g.room.mu.RLock()
 		for id, c := range g.room.clients {
-		scores = append(scores, ScoreEntry{ID: id, Nickname: c.nickname, Score: g.t2Score[id]})
+		scores = append(scores, ScoreEntry{ID: id, Nickname: c.nickname, Score: g.score[id]})
 		}
 		g.room.mu.RUnlock()
 
