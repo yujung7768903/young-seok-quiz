@@ -7,6 +7,7 @@ app = 'young-seok-quiz'
 primary_region = 'nrt'
 
 [build]
+  dockerfile = "Dockerfile"
 
 [http_service]
   internal_port = 8080
@@ -25,3 +26,11 @@ primary_region = 'nrt'
 [[services]]
   internal_port = 8080
   protocol = 'tcp'
+
+  [[services.ports]]
+    port = 80
+    handlers = ['http']
+
+  [[services.ports]]
+    port = 443
+    handlers = ['tls', 'http']
