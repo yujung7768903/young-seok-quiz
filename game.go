@@ -11,9 +11,11 @@ import (
 )
 
 const (
-	type1ThinkTime   = 30 * time.Second
-	type1AnswerTime  = 30 * time.Second
-	type1OptionCount = 4
+	type1ThinkTimeSecond      = 50
+	type1ThinkTimeNanoSecond  = type1ThinkTimeSecond * time.Second
+	type1AnswerTimeSecond     = 60
+	type1AnswerTimeNanoSecond = type1AnswerTimeSecond * time.Second
+	type1OptionCount          = 4
 
 	type2StartWait  = 5 * time.Second
 	type2QTime      = 10 * time.Second
@@ -108,7 +110,7 @@ func (g *Game) nextType1Round() {
 		"round":        g.t1CurrentRound,
 		"total_rounds": g.t1Rounds,
 		"question":     g.t1Question,
-		"time_limit":   30,
+		"time_limit":   type1ThinkTimeSecond,
 	})
 
 	others := g.room.allClientsExcept(g.t1QuestionerID)
@@ -120,7 +122,7 @@ func (g *Game) nextType1Round() {
 		})
 	}
 
-	g.resetTimer(type1ThinkTime, func() {
+	g.resetTimer(type1ThinkTimeNanoSecond, func() {
 		g.mu.Lock()
 		defer g.mu.Unlock()
 		if g.state != "type1_thinking" {
@@ -163,12 +165,12 @@ func (g *Game) startType1AnswerPhase() {
 		g.room.sendTo(c, "type1_answer_phase", map[string]interface{}{
 			"questioner_nickname": questNick,
 			"question":            g.t1Question,
-			"time_limit":          30,
+			"time_limit":          type1AnswerTimeSecond,
 		})
 	}
 
 	totalAnswerers := len(others)
-	g.resetTimer(type1AnswerTime, func() {
+	g.resetTimer(type1AnswerTimeNanoSecond, func() {
 		g.mu.Lock()
 		defer g.mu.Unlock()
 		if g.state != "type1_answering" {
