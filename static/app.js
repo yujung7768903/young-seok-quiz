@@ -129,6 +129,8 @@ const App = (() => {
     const nickname = document.getElementById('nickname-input').value.trim();
     if (!nickname) { toast('닉네임을 입력해주세요.'); return; }
     const roomId = getUrlRoomId();
+    console.log(`submitNickname roomId: ${roomId}`);
+    
     connect(() => {
       if (roomId) {
         send('join_room', { room_id: roomId, nickname });
