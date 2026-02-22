@@ -286,14 +286,14 @@ const App = (() => {
     sList.appendChild(chip2);
   }
 
-  function onType1Results({ round, total_rounds, questioner_nickname, question, questioner_ranking, player_results, accuracy, is_last_round }) {
+  function onType1Results({ round, total_rounds, questioner_nickname, question, questioner_ranking, player_results, perfect_count, is_last_round }) {
     stopTimer('t1a');
     stopTimer('t1s');
     state.readyNextClicked = false;
 
     document.getElementById('t1r-round-label').textContent = `ROUND ${round} / ${total_rounds}`;
     document.getElementById('t1r-title').textContent = `${questioner_nickname}님의 마음 📊`;
-    document.getElementById('t1r-accuracy').textContent = `${Math.round(accuracy)}%`;
+    document.getElementById('t1r-accuracy').textContent = `${Math.round(perfect_count)}명`;
     document.getElementById('t1r-next-btn').disabled = false;
     document.getElementById('t1r-ready-count').textContent = '0';
     document.getElementById('t1r-total-count').textContent = state.players.length;

@@ -229,8 +229,26 @@ func (g *Game) showType1Results() {
 		questNick = questioner.nickname
 	}
 
+	results := g.collectType1Results()
+	perfectCount := g.countPerfectScores(results)
+
+	g.room.broadcastJSON("type1_results", map[string]interface{}{
+		"round":               g.t1CurrentRound,
+		"total_rounds":        g.t1Rounds,
+		"questioner_nickname": questNick,
+		"question":            g.t1Question,
+		"questioner_ranking":  g.t1QuestRanking,
+		"player_results":      results,
+		"perfect_count":       perfectCount,
+		"is_last_round":       g.t1CurrentRound >= g.t1Rounds,
+	})
+}
+
+// 참여자 별로 점수 집계
+func (g *Game) collectType1Results() []t1PlayerResult {
 	var results []t1PlayerResult
 	g.room.mu.RLock()
+	defer g.room.mu.RUnlock()
 	for id, c := range g.room.clients {
 		if id == g.t1QuestionerID {
 			continue
@@ -249,29 +267,18 @@ func (g *Game) showType1Results() {
 			ID: id, Nickname: c.nickname, Ranking: ranking, Score: score,
 		})
 	}
-	g.room.mu.RUnlock()
+	return results
+}
 
+// 우선순위를 모두 맞힌 정답자 카운팅
+func (g *Game) countPerfectScores(results []t1PlayerResult) int {
 	perfectCount := 0
 	for _, pr := range results {
 		if pr.Score == type1OptionCount {
 			perfectCount++
 		}
 	}
-	accuracy := 0.0
-	if len(results) > 0 {
-		accuracy = float64(perfectCount) / float64(len(results)) * 100
-	}
-
-	g.room.broadcastJSON("type1_results", map[string]interface{}{
-		"round":               g.t1CurrentRound,
-		"total_rounds":        g.t1Rounds,
-		"questioner_nickname": questNick,
-		"question":            g.t1Question,
-		"questioner_ranking":  g.t1QuestRanking,
-		"player_results":      results,
-		"accuracy":            accuracy,
-		"is_last_round":       g.t1CurrentRound >= g.t1Rounds,
-	})
+	return perfectCount
 }
 
 func (g *Game) onReadyNext(c *Client) {
