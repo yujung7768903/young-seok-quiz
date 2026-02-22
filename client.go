@@ -148,6 +148,7 @@ func handleCreateRoom(hub *Hub, c *Client, data json.RawMessage) {
 	var d struct {
 		Nickname string `json:"nickname"`
 	}
+	log.Printf("handleCreateRoom nickname: %s", d.Nickname)
 	if err := json.Unmarshal(data, &d); err != nil || d.Nickname == "" {
 		sendError(c, "닉네임을 입력해주세요.")
 		return
