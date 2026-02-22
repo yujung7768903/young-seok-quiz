@@ -33,6 +33,20 @@ func (h *Hub) createRoom() *Room {
 	return room
 }
 
+func (h *Hub) getRoomOrCreateRoom(id string) *Room {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	// 방이 존재하는 경우
+	if r, exists := h.rooms[id]; exists {
+		return r
+	}
+	// 방이 없을 경우, 생성
+	room := newRoom(id, h)
+	h.rooms[id] = room
+	go room.run()
+	return room
+}
+
 func (h *Hub) getRoom(id string) (*Room, bool) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
@@ -103,10 +117,11 @@ func (r *Room) run() {
 			}
 
 			// If host left, reassign
-			if c.isHost {
+			if r.hostID == c.id {
 				for _, nc := range r.clients {
 					nc.isHost = true
 					r.hostID = nc.id
+					log.Printf("host left reassign. new host: %s", r.hostID)
 					break
 				}
 			}

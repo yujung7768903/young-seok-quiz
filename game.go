@@ -65,7 +65,7 @@ func (g *Game) start() {
 	defer g.mu.Unlock()
 	g.room.broadcastJSON("game_started", nil)
 	g.initScore()
-		g.initType1()
+	g.initType1()
 }
 
 func (g *Game) initScore() {
@@ -455,11 +455,11 @@ func (g *Game) endGame() {
 		Score    int    `json:"score"`
 	}
 	var scores []ScoreEntry
-		g.room.mu.RLock()
-		for id, c := range g.room.clients {
+	g.room.mu.RLock()
+	for id, c := range g.room.clients {
 		scores = append(scores, ScoreEntry{ID: id, Nickname: c.nickname, Score: g.score[id]})
-		}
-		g.room.mu.RUnlock()
+	}
+	g.room.mu.RUnlock()
 
 	g.room.broadcastJSON("game_over", map[string]interface{}{
 		"scores": scores,

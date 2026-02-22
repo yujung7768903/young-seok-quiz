@@ -179,11 +179,7 @@ func handleJoinRoom(hub *Hub, c *Client, data json.RawMessage) {
 		sendError(c, "닉네임을 입력해주세요.")
 		return
 	}
-	room, ok := hub.getRoom(d.RoomID)
-	if !ok {
-		sendError(c, "방을 찾을 수 없습니다.")
-		return
-	}
+	room := hub.getRoomOrCreateRoom(d.RoomID)
 	if room.game != nil {
 		sendError(c, "이미 게임이 시작된 방입니다.")
 		return
@@ -191,19 +187,25 @@ func handleJoinRoom(hub *Hub, c *Client, data json.RawMessage) {
 
 	// Build player list before registering
 	existingPlayers := room.playerList()
-	newPlayer := PlayerInfo{ID: c.id, Nickname: d.Nickname, IsHost: false}
+	log.Printf("handleJoinRoom room.clientCount(): %d", room.clientCount())
+	// 현재 존재하는 플레이어가 없다면, 새로 들어온 플레이어가 호스트
+	isHost := room.clientCount() == 0
+	newPlayer := PlayerInfo{ID: c.id, Nickname: d.Nickname, IsHost: isHost}
 	allPlayers := append(existingPlayers, newPlayer)
 
 	c.nickname = d.Nickname
 	c.room = room
-	c.isHost = false
+	c.isHost = isHost
+	if isHost {
+		room.hostID = c.id
+	}
 	room.register <- c
 
 	room.sendTo(c, "room_joined", map[string]interface{}{
 		"room_id":   room.id,
 		"player_id": c.id,
 		"players":   allPlayers,
-		"is_host":   false,
+		"is_host":   isHost,
 	})
 	room.broadcastExcept(c.id, "player_joined", map[string]interface{}{
 		"player":  newPlayer,
