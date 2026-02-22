@@ -6,6 +6,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/text/unicode/norm"
 )
 
 const (
@@ -13,7 +15,7 @@ const (
 	type1AnswerTime = 30 * time.Second
 	type2StartWait  = 5 * time.Second
 	type2QTime      = 10 * time.Second
-	type2ResultWait = 3 * time.Second
+	type2ResultWait = 0 * time.Second
 	type2NextWait   = 3 * time.Second
 )
 
@@ -484,5 +486,6 @@ func validRanking(r []int) bool {
 }
 
 func normalizeAnswer(s string) string {
+	s = norm.NFC.String(s)
 	return strings.ToLower(strings.TrimSpace(s))
 }
