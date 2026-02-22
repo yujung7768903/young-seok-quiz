@@ -41,6 +41,7 @@ func (h *Hub) getRoom(id string) (*Room, bool) {
 }
 
 func (h *Hub) removeRoom(id string) {
+	log.Printf("removeRoom id: %s", id)
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	delete(h.rooms, id)
