@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	type1ThinkTimeSecond      = 50
+	type1ThinkTimeSecond      = 120
 	type1ThinkTimeNanoSecond  = type1ThinkTimeSecond * time.Second
 	type1AnswerTimeSecond     = 60
 	type1AnswerTimeNanoSecond = type1AnswerTimeSecond * time.Second
