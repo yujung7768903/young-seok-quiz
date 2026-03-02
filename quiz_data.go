@@ -18,7 +18,7 @@ type Type1Question struct {
 
 var type1Questions = []Type1Question{
 	{
-		Question: "지금 가장 가고 싶은 여행은?",
+		Question: "지금 가장 가고 싶은 여행 순위는?",
 		Options: []string{
 			"아기자기한 소도시 골목 투어",
 			"살아숨쉬는 역사의 도시. 아름다운 건물과 미술관 투어",
@@ -31,7 +31,7 @@ var type1Questions = []Type1Question{
 		Options:  []string{"러닝", "봉사", "독서", "악기"},
 	},
 	{
-		Question: "같이 일하기 싫은 사람은?",
+		Question: "같이 일하기 싫은 사람 순위는?",
 		Options: []string{
 			"열정이 넘쳐서 실수도 넘쳐나는 후배",
 			"피드백이라고 간섭을 수시로 하는 동료",
@@ -40,7 +40,7 @@ var type1Questions = []Type1Question{
 		},
 	},
 	{
-		Question: "애인이 했을 때 가장 싫은 행동은?",
+		Question: "애인이 했을 때 가장 싫은 순위는?",
 		Options: []string{
 			"먹을 때 쩝쩝거리면서 다 흘리고, 같이 먹는 음식 더럽게 먹음",
 			"이성 친구와 전화로 연애 고민 상담 1시간 이상",
@@ -49,7 +49,7 @@ var type1Questions = []Type1Question{
 		},
 	},
 	{
-		Question: "모처럼의 긴 연휴가 왔다. 이 때 내가 하고싶은 것은?",
+		Question: "모처럼의 긴 연휴가 왔다. 이 때 내가 하고싶은 순위는?",
 		Options: []string{
 			"쉬는 게 짱이다",
 			"시간이 아까우니 생산적인 활동을 한다.",
@@ -58,7 +58,7 @@ var type1Questions = []Type1Question{
 		},
 	},
 	{
-		Question: "여행갈 때 더 같이 가고 싶은 사람은?",
+		Question: "여행갈 때 더 같이 가고 싶은 사람 순위는?",
 		Options: []string{
 			"계획은 없지만, 하자는 대로 다 하는 OK맨",
 			"휴식부터 먹거리, 놀거리까지 완벽한 플랜을 짜온 계획러",
@@ -67,7 +67,7 @@ var type1Questions = []Type1Question{
 		},
 	},
 	{
-		Question: "일상 속에서 내가 더 견디기 힘든 것은?",
+		Question: "일상 속에서 내가 더 견디기 힘든 순위는?",
 		Options: []string{
 			"약속 시간에 나만 있고, 다른 친구들 1시간 이상 늦는다고 함",
 			"계획에 없는 야근 or 계획에 없던 보충 학습",
@@ -76,7 +76,7 @@ var type1Questions = []Type1Question{
 		},
 	},
 	{
-		Question: "내가 제일 좋아하는 과목은?",
+		Question: "내가 좋아하는 과목 순위는?",
 		Options: []string{
 			"수학",
 			"영어",
@@ -94,7 +94,7 @@ var type1Questions = []Type1Question{
 		},
 	},
 	{
-		Question: "매주 1회 배워야 한다면?",
+		Question: "매주 1회 배워야 한다면, 배우고 싶은 순위는?",
 		Options: []string{
 			"악기",
 			"춤",
@@ -109,6 +109,33 @@ var type1Questions = []Type1Question{
 			"시간이 많이 남았으니 나 혼자 논다.",
 			"시간 아까우니 집에 간다.",
 			"다음에 만날 땐 나도 늦는다.",
+		},
+	},
+	{
+		Question: "돈을 많이 사용하는 곳의 순위는?",
+		Options: []string{
+			"식비",
+			"쇼핑",
+			"취미",
+			"인테리어",
+		},
+	},
+	{
+		Question: "좋아하는 프로그램 순위는?",
+		Options: []string{
+			"먹방",
+			"추리&탈출",
+			"다큐",
+			"레슬링",
+		},
+	},
+	{
+		Question: "연애 프로그램에 출연했다면, 호감가는 사람 순위는?",
+		Options: []string{
+			"취미나 성향이 비슷한 사람",
+			"성향이 반대인 사람",
+			"먼저 다가와주는 사람",
+			"조용하고 차분한 사람",
 		},
 	},
 }
