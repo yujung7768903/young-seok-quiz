@@ -49,7 +49,7 @@ var type1Questions = []Type1Question{
 		},
 	},
 	{
-		Question: "모처럼의 긴 연휴가 왔다. 이 때 내가 하고싶은 순위는?",
+		Question: "긴 연휴가 왔다. 내가 하고싶은 순위는?",
 		Options: []string{
 			"쉬는 게 짱이다",
 			"시간이 아까우니 생산적인 활동을 한다.",
@@ -85,7 +85,7 @@ var type1Questions = []Type1Question{
 		},
 	},
 	{
-		Question: "다음 생에 다시 태어난다면, 살아보고 싶은 삶의 순위는?",
+		Question: "다시 태어난다면, 살아보고 싶은 삶의 순위는?",
 		Options: []string{
 			"지금 이대로 똑같이 한 번 더",
 			"전 세계적인 스타",
