@@ -430,7 +430,11 @@ func (g *Game) showType2ResultFail(answer string, imageURL string) {
 func (g *Game) type2NextCountdown() {
 	g.t2CurrentIdx++
 	if g.t2CurrentIdx >= len(g.t2Questions) {
-		g.endGame()
+		g.resetTimer(type2NextWait, func() {
+			g.mu.Lock()
+			defer g.mu.Unlock()
+			g.endGame()
+		})
 		return
 	}
 	g.state = "type2_next_countdown"
