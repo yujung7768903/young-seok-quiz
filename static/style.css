@@ -51,7 +51,7 @@ p  { line-height: 1.6; color: var(--text-muted); }
 
 /* ── Logo ───────────────────────────────────────────── */
 .logo-wrap { text-align: center; margin-bottom: 32px; }
-.logo-wrap img { width: 80%; object-fit: contain; border-radius: 24px; }
+.logo-wrap img { width: 70%; object-fit: contain; border-radius: 24px; }
 .logo-title { font-size: 1.6rem; font-weight: 800; margin-top: 12px; }
 .logo-title span { color: var(--accent); }
 
