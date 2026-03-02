@@ -148,6 +148,8 @@ func randomType1Question() Type1Question {
 // Type 2 — 인물 퀴즈
 // ──────────────────────────────────────────────
 
+const type2QuestionLen = 10
+
 type PersonQuestion struct {
 	ImageURL string `json:"image_url"`
 	Answer   string `json:"answer"`
@@ -176,8 +178,8 @@ func loadPersonQuestions() ([]PersonQuestion, error) {
 		}
 	}
 	rand.Shuffle(len(questions), func(i, j int) { questions[i], questions[j] = questions[j], questions[i] })
-	if len(questions) > 5 {
-		questions = questions[:5]
+	if len(questions) > type2QuestionLen {
+		questions = questions[:type2QuestionLen]
 	}
 	return questions, nil
 }
