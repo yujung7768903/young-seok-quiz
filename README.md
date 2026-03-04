@@ -24,51 +24,33 @@
 
 ---
 
-## 아키텍처
+## 구성요소
 
-```
-Hub
-├── Room [ABC123]
-│   ├── Client (영석)  ── send chan ── writePump ── WebSocket conn ── 브라우저
-│   │                               readPump  ──────────────────────────────▶
-│   ├── Client (민준)  ── send chan ── writePump ── WebSocket conn ── 브라우저
-│   └── Game
-│       ├── Type1 (마음 퀴즈) 상태 관리
-│       └── Type2 (인물 퀴즈) 상태 관리
-└── Room [XYZ789]
-    └── ...
-```
-
-**Hub**: 전체 방 목록을 관리하는 최상위 구조체 (`map[string]*Room` + `sync.RWMutex`)
-
-**Room**: 같은 방의 클라이언트를 관리하고 브로드캐스트를 담당. `register` / `unregister` 채널로 클라이언트 입퇴장을 처리하며, 별도 고루틴(`room.run()`)에서 이벤트를 순차 처리한다.
-
-**Client**: WebSocket 연결 하나에 대응하며, 고루틴 2개를 가진다.
-- `readPump`: 브라우저 → 서버 수신 전담. `conn.ReadMessage()`로 블로킹 대기.
-- `writePump`: 서버 → 브라우저 송신 전담. `send` 채널에서 꺼내 `conn.Write()` 호출.
-
-> gorilla/websocket은 concurrent write를 허용하지 않으므로, Read/Write를 각각의 고루틴이 전담한다.
-
-**Game**: 게임 상태 머신. `state` 필드로 현재 단계를 관리하고, `sync.Mutex`로 동시 접근을 보호한다. `time.AfterFunc`으로 제한 시간을 구현한다.
+* **Hub**: 전체 방 목록을 관리하는 최상위 구조체
+* **Room**: 같은 방의 클라이언트를 관리하고 브로드캐스트를 담당. `register` / `unregister` 채널로 클라이언트 입퇴장을 처리하며, 별도 고루틴(`room.run()`)에서 이벤트를 순차 처리한다.
+* **Client**: WebSocket 연결 하나에 대응하며, 고루틴 2개를 가진다.
+  - `readPump`: 브라우저 → 서버 수신 전담. `conn.ReadMessage()`로 블로킹 대기.
+  - `writePump`: 서버 → 브라우저 송신 전담. `send` 채널에서 꺼내 `conn.Write()` 호출.
+* **Game**: 게임 상태 관리. `state` 필드로 현재 단계를 관리하고, `sync.Mutex`로 동시 접근을 보호한다.
 
 ---
 
 ## WebSocket 메시지 흐름
 
 ### 기본 흐름
+#### 브라우저 -> 서버
+1. 이벤트 발생
+2. 메세지 전송
+3. readPump 고루틴에서 메세지 수신
+4. client.go 의 handleMessage() 를 통해 이벤트 처리
 
-```
-[브라우저]                        [Go 서버]
+#### 서버 -> 브라우저
+1. 이벤트 발생
+2. 이벤트 발생 시 Room > Client > send 채널에 메세지 전송
+3. wrtiePump 고루틴에서 send 채널로부터 메세지를 꺼내 브라우저에 전송
+4. 브라우저는 app.js의 handleServerMessage() 를 통해 이벤트 처리
 
-   send(msg)  ─────────────▶  readPump
-                               └─ handleMessage()
-                                   └─ 게임 로직 (game.go)
-                                       └─ broadcastJSON() / sendTo()
-                                           └─ c.send channel
-   onmessage  ◀─────────────  writePump
-```
-
-### 브라우저 → 서버 메시지
+### 브라우저 → 서버 메시지 종류
 
 | type | 설명 |
 |---|---|
@@ -80,7 +62,7 @@ Hub
 | `ready_next` | 다음 문제 준비 완료 |
 | `type2_submit_answer` | 인물 퀴즈 답 제출 |
 
-### 서버 → 브라우저 메시지
+### 서버 → 브라우저 메시지 종류
 
 | type | 설명 |
 |---|---|
@@ -101,27 +83,3 @@ Hub
 | `type2_next_countdown` | 다음 문제 카운트다운 |
 | `game_over` | 게임 종료 및 최종 점수 |
 | `error` | 에러 메시지 |
-
-### 게임1 흐름 예시 (마음 퀴즈)
-
-```
-[영석-출제자]         [Go 서버]         [민준-참여자]
-
-                   type1_questioner
-영석 화면 표시  ◀──────────────────
-                   type1_waiting
-                   ─────────────────▶  민준 화면 표시
-
-순위 선택 후 제출
-type1_submit_ranking ──────────────▶
-
-                   type1_answer_phase
-                   ─────────────────▶  민준 답변 화면
-type1_questioner_waiting
-영석 대기 화면  ◀──────────────────
-
-                   type2_submit_guess ◀── 민준 제출
-
-                   type1_results
-최종 결과      ◀─────────────────────▶  최종 결과
-```
