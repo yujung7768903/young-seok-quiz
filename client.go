@@ -173,8 +173,6 @@ func handleJoinRoom(hub *Hub, c *Client, data json.RawMessage) {
 		RoomID   string `json:"room_id"`
 		Nickname string `json:"nickname"`
 	}
-	log.Printf("rooms: %v", hub.rooms)
-	log.Printf("handleJoinRoom RoomId: %s", d.RoomID)
 	if err := json.Unmarshal(data, &d); err != nil || d.Nickname == "" {
 		sendError(c, "닉네임을 입력해주세요.")
 		return
@@ -189,6 +187,10 @@ func handleJoinRoom(hub *Hub, c *Client, data json.RawMessage) {
 	existingPlayers := room.playerList()
 	log.Printf("handleJoinRoom room.clientCount(): %d", room.clientCount())
 	// 현재 존재하는 플레이어가 없다면, 새로 들어온 플레이어가 호스트
+	// TODO: 호스트가 없는 상태에서 동시 입장할 경우,
+	// room.run에서 register를 처리하기 전에 동시에 입장한다면,
+	// clientCount가 0이라 여러 명의 호스트가 발생할 수 있음
+	// 실사용에서는 동시 입장할 확률이 적으므로 현재는 허용함
 	isHost := room.clientCount() == 0
 	newPlayer := PlayerInfo{ID: c.id, Nickname: d.Nickname, IsHost: isHost}
 	allPlayers := append(existingPlayers, newPlayer)
@@ -197,7 +199,9 @@ func handleJoinRoom(hub *Hub, c *Client, data json.RawMessage) {
 	c.room = room
 	c.isHost = isHost
 	if isHost {
+		room.mu.Lock()
 		room.hostID = c.id
+		room.mu.Unlock()
 	}
 	room.register <- c
 
