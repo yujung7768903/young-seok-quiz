@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sync"
 	"testing"
 
 	"golang.org/x/text/unicode/norm"
@@ -58,6 +59,33 @@ func TestType1Results(t *testing.T) {
 
 	if count != 1 {
 		t.Errorf("정답자 수 = %d, want = %d", count, 1)
+	}
+}
+
+// 동시에 정답
+func TestConcurrentSubmitType2Answer(t *testing.T) {
+	hub := newHub()
+	room := newRoom("ROOM01", hub)
+	game := newGame(room)
+	game.state = "type2_question"
+	answer := "김유정"
+	game.t2Questions = []PersonQuestion{{Answer: answer}}
+	var wg sync.WaitGroup
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			game.onType2Answer(newTestClient(), answer)
+		}()
+	}
+	wg.Wait()
+	// 검증: 한 명만 정답을 맞혔는지
+	total := 0
+	for _, score := range game.score {
+		total += score
+	}
+	if total != 1 {
+		t.Errorf("플레이어 점수 합 = %d, want = %d", total, 1)
 	}
 }
 
